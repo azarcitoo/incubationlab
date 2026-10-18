@@ -12,7 +12,7 @@ export const developmentDays: DevelopmentDay[] = [
     day: 1,
     stage: "Inicio del desarrollo",
     description:
-      "Con la incubación comienza a reanudarse el desarrollo embrionario que se había ralentizado durante el almacenamiento del huevo. La actividad celular temprana ocurre en el disco germinal.",
+      "Al comenzar la incubación, se reanuda el desarrollo embrionario, que se había ralentizado durante el almacenamiento del huevo. La actividad celular temprana ocurre en el disco germinal.",
     changes: ["Se organizan las primeras células del embrión.", "Empieza la formación de los ejes corporales."],
     structures: ["Disco germinal", "Blastodermo temprano"],
     curiosity: "El desarrollo empieza antes de la puesta; la incubación permite que continúe cuando las condiciones son adecuadas.",
@@ -21,7 +21,7 @@ export const developmentDays: DevelopmentDay[] = [
     day: 2,
     stage: "Organización inicial",
     description:
-      "El blastodermo se reorganiza en capas celulares que darán origen a distintos tejidos. Se hacen más reconocibles las regiones que orientan el futuro cuerpo.",
+      "El blastodermo se reorganiza en capas celulares que darán origen a distintos tejidos. Comienzan a distinguirse las regiones que definirán el eje corporal.",
     changes: ["Se diferencian capas embrionarias.", "Comienzan a establecerse regiones del cuerpo."],
     structures: ["Capas germinales", "Línea primitiva"],
     curiosity: "Las capas embrionarias son el punto de partida de muchos tejidos y órganos del ave.",
@@ -57,7 +57,7 @@ export const developmentDays: DevelopmentDay[] = [
     day: 6,
     stage: "Extremidades incipientes",
     description:
-      "Las extremidades en formación se hacen más evidentes y comienzan procesos de diferenciación en sus tejidos. El embrión mantiene una intensa actividad de crecimiento.",
+      "Las extremidades en formación se hacen más evidentes y sus tejidos comienzan a diferenciarse. El embrión mantiene un ritmo de crecimiento intenso.",
     changes: ["Se alargan los primordios de las extremidades.", "Prosigue la formación del esqueleto y los órganos."],
     structures: ["Yemas de alas y patas", "Membranas extraembrionarias"],
     curiosity: "Aún no hay plumas desarrolladas: primero se organizan los tejidos de la piel y sus futuros apéndices.",
@@ -84,7 +84,7 @@ export const developmentDays: DevelopmentDay[] = [
     day: 9,
     stage: "Crecimiento sostenido",
     description:
-      "La forma del embrión se diferencia más y sus extremidades siguen desarrollándose. Las membranas participan cada vez más en el intercambio y la protección.",
+      "La forma del embrión se define cada vez más y sus extremidades siguen desarrollándose. Las membranas participan cada vez más en el intercambio y la protección.",
     changes: ["Continúa la diferenciación de dedos y articulaciones.", "Se amplían las membranas extraembrionarias."],
     structures: ["Dedos", "Alantoides en expansión", "Amnios"],
     curiosity: "El alantoides participa en el intercambio gaseoso y en el almacenamiento de desechos durante el desarrollo.",
@@ -111,7 +111,7 @@ export const developmentDays: DevelopmentDay[] = [
     day: 12,
     stage: "Formación del plumón",
     description:
-      "Empiezan a desarrollarse los folículos de las plumas y puede iniciarse la aparición de plumón. Continúan la maduración del esqueleto y de los órganos.",
+      "Comienzan a desarrollarse los folículos de las plumas y puede aparecer el plumón. Continúa la maduración del esqueleto y de los órganos.",
     changes: ["Se desarrollan folículos plumosos.", "Prosigue el crecimiento de las extremidades."],
     structures: ["Folículos de plumas", "Esqueleto", "Alantoides"],
     curiosity: "Las plumas se forman a partir de folículos de la piel, no aparecen como una capa instantánea.",
@@ -123,13 +123,13 @@ export const developmentDays: DevelopmentDay[] = [
       "El plumón puede hacerse más evidente y el embrión ocupa una porción creciente del huevo. El esqueleto continúa su desarrollo.",
     changes: ["Avanza la cobertura de plumón.", "Se endurecen gradualmente algunas estructuras óseas."],
     structures: ["Plumón", "Párpados", "Esqueleto"],
-    curiosity: "El aspecto visible depende de la etapa y de las condiciones; no todos los huevos avanzan exactamente al mismo ritmo.",
+    curiosity: "El aspecto visible depende de la etapa y de las condiciones; el desarrollo no avanza exactamente al mismo ritmo en todos los huevos.",
   },
   {
     day: 14,
     stage: "Preparación gradual",
     description:
-      "El embrión sigue creciendo y madurando; las plumas y el pico continúan desarrollándose. La postura dentro del huevo empieza a ser importante para la etapa final.",
+      "El embrión sigue creciendo y madurando; las plumas y el pico continúan desarrollándose. La postura dentro del huevo comienza a cobrar importancia para la etapa final.",
     changes: ["Se desarrolla el plumón.", "Continúa la maduración de los sistemas corporales."],
     structures: ["Plumón", "Pico", "Membrana corioalantoidea"],
     curiosity: "La membrana corioalantoidea contribuye al intercambio de gases a través de los poros de la cáscara.",
@@ -147,8 +147,8 @@ export const developmentDays: DevelopmentDay[] = [
     day: 16,
     stage: "Maduración final",
     description:
-      "Aumenta la preparación para la vida fuera del huevo. El embrión sigue absorbiendo el vitelo y completando cambios funcionales en varios sistemas.",
-    changes: ["Prosigue la absorción del vitelo.", "Se afina la postura del embrión."],
+      "El embrión continúa preparándose para la vida fuera del huevo, absorbiendo el vitelo y completando cambios funcionales en varios sistemas.",
+    changes: ["Prosigue la absorción del vitelo.", "La postura del embrión se ajusta gradualmente."],
     structures: ["Saco vitelino", "Pulmones", "Plumón"],
     curiosity: "El saco vitelino que queda al final se incorpora al cuerpo y aporta reservas al polluelo recién nacido.",
   },
@@ -165,10 +165,10 @@ export const developmentDays: DevelopmentDay[] = [
     day: 18,
     stage: "Transición a la respiración",
     description:
-      "En condiciones habituales se aproxima la transición hacia la respiración pulmonar y el embrión completa su preparación para romper la membrana interna.",
+      "En condiciones habituales, se acerca el momento de la transición a la respiración pulmonar y el embrión completa su preparación para romper la membrana interna.",
     changes: ["Avanza la preparación respiratoria.", "El vitelo se absorbe hacia el cuerpo."],
     structures: ["Cámara de aire", "Pulmones", "Membranas del huevo"],
-    curiosity: "La ovoscopia puede ayudar a observar algunas estructuras, pero su interpretación depende de experiencia y condiciones.",
+    curiosity: "La ovoscopia puede ayudar a observar algunas estructuras, pero su interpretación depende de la experiencia y de las condiciones de observación.",
   },
   {
     day: 19,
@@ -193,7 +193,7 @@ export const developmentDays: DevelopmentDay[] = [
     stage: "Eclosión",
     description:
       "Alrededor de este momento muchos polluelos completan la salida del huevo, aunque el tiempo puede variar. Tras eclosionar, necesitan reposo mientras se secan.",
-    changes: ["El polluelo puede completar la eclosión.", "Termina la transición hacia la respiración y vida fuera del huevo."],
+    changes: ["El polluelo puede completar la eclosión.", "Termina la transición hacia la respiración y la vida fuera del huevo."],
     structures: ["Cáscara", "Plumón húmedo que se seca", "Saco vitelino incorporado"],
     curiosity: "Veintiún días es una referencia habitual para la gallina, no un plazo exacto aplicable a cada huevo.",
   },

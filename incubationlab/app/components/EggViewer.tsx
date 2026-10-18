@@ -23,13 +23,13 @@ const layerInfo: {
   name: string;
   description: string;
 }[] = [
-  { id: "shell", name: "Cáscara", description: "Capa calcificada protectora; en el corte se conserva como una media cáscara." },
-  { id: "membranes", name: "Membranas", description: "Las membranas testáceas revisten la cáscara; la vitelina envuelve la yema." },
-  { id: "albumen", name: "Clara", description: "Albúmina gelatinosa que amortigua y aporta agua al embrión." },
+  { id: "shell", name: "Cáscara", description: "Capa calcificada protectora; en la vista seccionada se retira una parte para mostrar el interior." },
+  { id: "membranes", name: "Membranas", description: "Las membranas testáceas revisten la cáscara; la membrana vitelina envuelve la yema." },
+  { id: "albumen", name: "Clara", description: "La albúmina gelatinosa amortigua los golpes y aporta agua al embrión." },
   { id: "yolk", name: "Yema y saco vitelino", description: "Reserva nutritiva rodeada por el saco vitelino vascularizado." },
   { id: "vessels", name: "Vasos sanguíneos", description: "Red extraembrionaria ilustrativa conectada al embrión y a la superficie del vitelo." },
-  { id: "embryo", name: "Embrión", description: "Modelo procedural educativo; silueta y estructuras cambian progresivamente con el día." },
-  { id: "extraembryonic", name: "Membranas extraembrionarias", description: "Amnios y corioalantoides simplificados; participan en protección e intercambio." },
+  { id: "embryo", name: "Embrión", description: "Modelo educativo generado mediante procedimientos; la silueta y las estructuras varían gradualmente según el día." },
+  { id: "extraembryonic", name: "Membranas extraembrionarias", description: "Representación simplificada del amnios y la membrana corioalantoidea, que intervienen en la protección y el intercambio gaseoso." },
 ];
 
 const defaultLayers: EggLayers = {
@@ -109,7 +109,7 @@ export default function EggViewer({
             type="button"
             aria-label={hatchingActive ? "Desactivar modo de eclosión" : "Activar modo de eclosión"}
             aria-pressed={hatchingActive}
-            title={day >= 19 ? "Abertura ilustrativa cerca de la cámara de aire" : "Disponible en los días finales"}
+            title={day >= 19 ? "Abertura ilustrativa cerca de la cámara de aire" : "Disponible en los últimos días"}
             disabled={day < 19}
             onClick={() => setHatching((current) => !current)}
           >
@@ -215,7 +215,7 @@ export default function EggViewer({
       </div>
       <div className="viewer-bottomline" aria-hidden="true">
         <span>Arrastra para rotar · rueda para acercar</span>
-        <span>Ilustración conceptual, no anatomía validada</span>
+        <span>Ilustración conceptual; no es una representación anatómica validada</span>
       </div>
     </section>
   );

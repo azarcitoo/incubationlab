@@ -100,7 +100,7 @@ export default function IncubationPage() {
           onToggle={() => setOvoscopy((current) => !current)}
         />
         <p className="model-disclaimer">
-          Ilustración 3D procedural simplificada. Las etapas son orientativas:
+          Ilustración 3D simplificada y generada mediante procedimientos. Las etapas son orientativas:
           el ritmo de desarrollo puede variar según las condiciones de
           incubación.
         </p>
