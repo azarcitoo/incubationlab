@@ -1,15 +1,22 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
-import type { ThreeEvent } from "@react-three/fiber";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import {
+  AmbientLight,
   BufferAttribute,
   BufferGeometry,
   CatmullRomCurve3,
+  Color,
   DataTexture,
   DoubleSide,
+  DirectionalLight,
+  Group,
+  HemisphereLight,
+  Material,
   MathUtils,
   MeshPhysicalMaterial,
+  PointLight,
   RGBAFormat,
   TubeGeometry,
   Vector3,
@@ -244,6 +251,137 @@ function useDispose(geometries: BufferGeometry[]) {
     () => () => geometries.forEach((geometry) => geometry.dispose()),
     [geometries],
   );
+}
+
+type LayerMaterialState = {
+  opacity: number;
+  transparent: boolean;
+  depthWrite: boolean;
+};
+
+function visitMaterials(group: Group, callback: (material: Material) => void) {
+  group.traverse((object) => {
+    if ("material" in object && object.material) {
+      const materials = Array.isArray(object.material)
+        ? object.material
+        : [object.material];
+      materials.forEach(callback);
+    }
+  });
+}
+
+function LayerTransition({
+  visible,
+  reducedMotion,
+  children,
+}: {
+  visible: boolean;
+  reducedMotion: boolean;
+  children: React.ReactNode;
+}) {
+  const group = useRef<Group>(null);
+  const initialized = useRef(false);
+  const progress = useRef(visible ? 1 : 0);
+  const animation = useRef({
+    from: visible ? 1 : 0,
+    to: visible ? 1 : 0,
+    startedAt: 0,
+    active: false,
+  });
+  const materials = useRef(new Map<Material, LayerMaterialState>());
+  const { invalidate } = useThree();
+
+  useLayoutEffect(() => {
+    const node = group.current;
+    if (!node) return;
+
+    if (!initialized.current) {
+      initialized.current = true;
+      node.visible = visible;
+      return;
+    }
+    if (!animation.current.active && animation.current.to === Number(visible)) return;
+
+    if (!animation.current.active) {
+      materials.current.clear();
+      visitMaterials(node, (material) => {
+        materials.current.set(material, {
+          opacity: material.opacity,
+          transparent: material.transparent,
+          depthWrite: material.depthWrite,
+        });
+      });
+    }
+
+    if (visible) node.visible = true;
+    if (reducedMotion) {
+      materials.current.forEach((state, material) => {
+        material.opacity = state.opacity;
+        const transparencyChanged = material.transparent !== state.transparent;
+        material.transparent = state.transparent;
+        material.depthWrite = state.depthWrite;
+        if (transparencyChanged) material.needsUpdate = true;
+      });
+      materials.current.clear();
+      progress.current = Number(visible);
+      animation.current.active = false;
+      node.visible = visible;
+      invalidate();
+      return;
+    }
+
+    animation.current.from = progress.current;
+    animation.current.to = Number(visible);
+    animation.current.startedAt = performance.now();
+    animation.current.active = true;
+    invalidate();
+  }, [invalidate, reducedMotion, visible]);
+
+  useFrame(() => {
+    const node = group.current;
+    const current = animation.current;
+    if (!node || !current.active) return;
+
+    const elapsed = Math.min(1, (performance.now() - current.startedAt) / 230);
+    const eased = elapsed * elapsed * (3 - 2 * elapsed);
+    progress.current = MathUtils.lerp(current.from, current.to, eased);
+
+    visitMaterials(node, (material) => {
+      let state = materials.current.get(material);
+      if (!state) {
+        state = {
+          opacity: material.opacity,
+          transparent: material.transparent,
+          depthWrite: material.depthWrite,
+        };
+        materials.current.set(material, state);
+      }
+      material.opacity = state.opacity * progress.current;
+      if (!material.transparent) {
+        material.transparent = true;
+        material.needsUpdate = true;
+      }
+      material.depthWrite = false;
+    });
+
+    if (elapsed >= 1) {
+      current.active = false;
+      materials.current.forEach((state, material) => {
+        material.opacity = state.opacity;
+        const transparencyChanged = material.transparent !== state.transparent;
+        material.transparent = state.transparent;
+        material.depthWrite = state.depthWrite;
+        if (transparencyChanged) material.needsUpdate = true;
+      });
+      materials.current.clear();
+      node.visible = current.to === 1;
+      progress.current = current.to;
+      return;
+    }
+    invalidate();
+  });
+
+  return <group ref={group}>{children}</group>;
 }
 
 function ShellRim({ color }: { color: string }) {
@@ -784,92 +922,323 @@ export default function EggAnatomy({
   selectedLayer,
   onSelectLayer,
 }: EggAnatomyProps) {
-  const safeDay = MathUtils.clamp(day, 1, 21);
+  const [modelDay, setModelDay] = useState(day);
+  const [modelSectioned, setModelSectioned] = useState(sectioned);
+  const [modelHatching, setModelHatching] = useState(hatching);
+  const [reducedMotion, setReducedMotion] = useState(
+    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
+  const anatomy = useRef<Group>(null);
+  const ambientLight = useRef<AmbientLight>(null);
+  const hemisphereLight = useRef<HemisphereLight>(null);
+  const keyLight = useRef<DirectionalLight>(null);
+  const fillLight = useRef<DirectionalLight>(null);
+  const frontLight = useRef<PointLight>(null);
+  const backLight = useRef<PointLight>(null);
+  const { invalidate, scene } = useThree();
+  const safeDay = MathUtils.clamp(reducedMotion ? day : modelDay, 1, 21);
+  const safeSectioned = reducedMotion ? sectioned : modelSectioned;
+  const safeHatching = (reducedMotion ? hatching : modelHatching) && safeDay >= 19;
+  const previousSelection = useRef({ day, sectioned, hatching });
+  const previousOvoscopy = useRef(ovoscopy);
+  const dayTransition = useRef({
+    fromScale: 1,
+    startedAt: 0,
+    active: false,
+    modelUpdated: false,
+    targetDay: day,
+    targetSectioned: sectioned,
+    targetHatching: hatching,
+  });
+  const modeTransition = useRef({
+    from: ovoscopy ? 1 : 0,
+    to: ovoscopy ? 1 : 0,
+    progress: ovoscopy ? 1 : 0,
+    startedAt: 0,
+    active: false,
+  });
+  const normalBackground = useMemo(() => new Color("#0a1720"), []);
+  const ovoscopyBackground = useMemo(() => new Color("#05090c"), []);
+  const normalSky = useMemo(() => new Color("#d8eeee"), []);
+  const ovoscopySky = useMemo(() => new Color("#dfac7b"), []);
+  const normalGround = useMemo(() => new Color("#26323c"), []);
+  const ovoscopyGround = useMemo(() => new Color("#26323c"), []);
+  const normalFill = useMemo(() => new Color("#a8e3dc"), []);
+  const ovoscopyFill = useMemo(() => new Color("#ffb36c"), []);
+  const normalFront = useMemo(() => new Color("#ffd6a0"), []);
+  const ovoscopyFront = useMemo(() => new Color("#ffd6a0"), []);
+
+  useEffect(() => {
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updatePreference = () => {
+      setReducedMotion(preference.matches);
+      dayTransition.current.active = false;
+      if (anatomy.current) anatomy.current.scale.setScalar(1);
+      setModelDay(day);
+      setModelSectioned(sectioned);
+      setModelHatching(hatching);
+    };
+    preference.addEventListener("change", updatePreference);
+    return () => preference.removeEventListener("change", updatePreference);
+  }, [day, hatching, sectioned]);
+
+  useEffect(() => {
+    const changed =
+      previousSelection.current.day !== day ||
+      previousSelection.current.sectioned !== sectioned ||
+      previousSelection.current.hatching !== hatching;
+    if (!changed) {
+      if (reducedMotion) {
+        dayTransition.current.active = false;
+        if (anatomy.current) anatomy.current.scale.setScalar(1);
+      }
+      return;
+    }
+    previousSelection.current = { day, sectioned, hatching };
+    if (reducedMotion) {
+      dayTransition.current.active = false;
+      if (anatomy.current) anatomy.current.scale.setScalar(1);
+      return;
+    }
+    dayTransition.current.fromScale = anatomy.current?.scale.x ?? 1;
+    dayTransition.current.startedAt = performance.now();
+    dayTransition.current.modelUpdated = false;
+    dayTransition.current.targetDay = day;
+    dayTransition.current.targetSectioned = sectioned;
+    dayTransition.current.targetHatching = hatching;
+    dayTransition.current.active = true;
+    invalidate();
+  }, [day, hatching, invalidate, reducedMotion, sectioned]);
+
+  useEffect(() => {
+    const applyOvoscopyState = (amount: number) => {
+      if (scene.background instanceof Color) {
+        scene.background.lerpColors(normalBackground, ovoscopyBackground, amount);
+      }
+      if (ambientLight.current) ambientLight.current.intensity = MathUtils.lerp(0.54, 0.28, amount);
+      if (hemisphereLight.current) {
+        hemisphereLight.current.color.lerpColors(normalSky, ovoscopySky, amount);
+        hemisphereLight.current.groundColor.lerpColors(normalGround, ovoscopyGround, amount);
+      }
+      if (keyLight.current) keyLight.current.intensity = MathUtils.lerp(2, 0.24, amount);
+      if (fillLight.current) {
+        fillLight.current.intensity = MathUtils.lerp(1.2, 1.35, amount);
+        fillLight.current.color.lerpColors(normalFill, ovoscopyFill, amount);
+      }
+      if (frontLight.current) {
+        frontLight.current.intensity = MathUtils.lerp(0.42, 1.6, amount);
+        frontLight.current.color.lerpColors(normalFront, ovoscopyFront, amount);
+      }
+      if (backLight.current) backLight.current.intensity = MathUtils.lerp(0, 13, amount);
+    };
+    if (previousOvoscopy.current === ovoscopy) {
+      if (reducedMotion) {
+        modeTransition.current.progress = Number(ovoscopy);
+        modeTransition.current.active = false;
+        applyOvoscopyState(Number(ovoscopy));
+      }
+      return;
+    }
+    previousOvoscopy.current = ovoscopy;
+    if (reducedMotion) {
+      modeTransition.current.progress = Number(ovoscopy);
+      modeTransition.current.active = false;
+      applyOvoscopyState(Number(ovoscopy));
+      return;
+    }
+    modeTransition.current.from = modeTransition.current.progress;
+    modeTransition.current.to = Number(ovoscopy);
+    modeTransition.current.startedAt = performance.now();
+    modeTransition.current.active = true;
+    invalidate();
+  }, [
+    invalidate,
+    normalBackground,
+    normalFill,
+    normalFront,
+    normalGround,
+    normalSky,
+    ovoscopy,
+    ovoscopyBackground,
+    ovoscopyFill,
+    ovoscopyFront,
+    ovoscopyGround,
+    ovoscopySky,
+    reducedMotion,
+    scene,
+  ]);
+
+  useFrame(({ scene }) => {
+    const dayMotion = dayTransition.current;
+    const modeMotion = modeTransition.current;
+
+    if (dayMotion.active && anatomy.current) {
+      const elapsed = Math.min(1, (performance.now() - dayMotion.startedAt) / 260);
+      if (elapsed < 0.5) {
+        const eased = elapsed * 2;
+        const scale = MathUtils.lerp(
+          dayMotion.fromScale,
+          0.985,
+          eased * eased * (3 - 2 * eased),
+        );
+        anatomy.current.scale.setScalar(scale);
+      } else {
+        if (!dayMotion.modelUpdated) {
+          dayMotion.modelUpdated = true;
+          setModelDay(dayMotion.targetDay);
+          setModelSectioned(dayMotion.targetSectioned);
+          setModelHatching(dayMotion.targetHatching);
+        }
+        const eased = (elapsed - 0.5) * 2;
+        const scale = MathUtils.lerp(0.985, 1, eased * eased * (3 - 2 * eased));
+        anatomy.current.scale.setScalar(scale);
+      }
+      if (elapsed >= 1) {
+        anatomy.current.scale.setScalar(1);
+        dayMotion.active = false;
+      }
+    }
+
+    if (modeMotion.active) {
+      const elapsed = Math.min(1, (performance.now() - modeMotion.startedAt) / 300);
+      const eased = elapsed * elapsed * (3 - 2 * elapsed);
+      modeMotion.progress = MathUtils.lerp(modeMotion.from, modeMotion.to, eased);
+      const amount = modeMotion.progress;
+      if (scene.background instanceof Color) {
+        scene.background.lerpColors(normalBackground, ovoscopyBackground, amount);
+      }
+      if (ambientLight.current) ambientLight.current.intensity = MathUtils.lerp(0.54, 0.28, amount);
+      if (hemisphereLight.current) {
+        hemisphereLight.current.color.lerpColors(normalSky, ovoscopySky, amount);
+        hemisphereLight.current.groundColor.lerpColors(normalGround, ovoscopyGround, amount);
+      }
+      if (keyLight.current) keyLight.current.intensity = MathUtils.lerp(2, 0.24, amount);
+      if (fillLight.current) {
+        fillLight.current.intensity = MathUtils.lerp(1.2, 1.35, amount);
+        fillLight.current.color.lerpColors(normalFill, ovoscopyFill, amount);
+      }
+      if (frontLight.current) {
+        frontLight.current.intensity = MathUtils.lerp(0.42, 1.6, amount);
+        frontLight.current.color.lerpColors(normalFront, ovoscopyFront, amount);
+      }
+      if (backLight.current) backLight.current.intensity = MathUtils.lerp(0, 13, amount);
+      if (elapsed >= 1) modeMotion.active = false;
+    }
+
+    if (dayMotion.active || modeMotion.active) invalidate();
+  });
+
   const shadowTexture = useMemo(() => createShadowTexture(), []);
   useEffect(() => () => shadowTexture.dispose(), [shadowTexture]);
   return (
     <>
-      <color attach="background" args={[ovoscopy ? "#05090c" : "#0a1720"]} />
-      <ambientLight intensity={ovoscopy ? 0.28 : 0.54} />
-      <hemisphereLight args={[ovoscopy ? "#dfac7b" : "#d8eeee", "#26323c", 0.46]} />
-      <directionalLight position={[-3.5, 4, 4]} intensity={ovoscopy ? 0.24 : 2} color="#fff0da" />
-      <directionalLight position={[3, 2, -4]} intensity={ovoscopy ? 1.35 : 1.2} color={ovoscopy ? "#ffb36c" : "#a8e3dc"} />
-      <pointLight position={[0.25, 0.15, 2.5]} intensity={ovoscopy ? 1.6 : 0.42} color="#ffd6a0" distance={5} />
-      {ovoscopy && <pointLight position={[0, 0, -1.4]} intensity={13} color="#ff9b4a" distance={3.2} />}
+      <color attach="background" args={["#0a1720"]} />
+      <ambientLight ref={ambientLight} intensity={0.54} />
+      <hemisphereLight ref={hemisphereLight} args={["#d8eeee", "#26323c", 0.46]} />
+      <directionalLight ref={keyLight} position={[-3.5, 4, 4]} intensity={2} color="#fff0da" />
+      <directionalLight ref={fillLight} position={[3, 2, -4]} intensity={1.2} color="#a8e3dc" />
+      <pointLight ref={frontLight} position={[0.25, 0.15, 2.5]} intensity={0.42} color="#ffd6a0" distance={5} />
+      <pointLight ref={backLight} position={[0, 0, -1.4]} intensity={0} color="#ff9b4a" distance={3.2} />
 
-      <mesh position={[0.08, -1.125, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[2.8, 2.3]} />
-        <meshBasicMaterial
-          map={shadowTexture}
-          color="#26343a"
-          transparent
-          opacity={0.62}
-          side={DoubleSide}
-          depthWrite={false}
-        />
-      </mesh>
+      <group ref={anatomy}>
+        <mesh position={[0.08, -1.125, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[2.8, 2.3]} />
+          <meshBasicMaterial
+            map={shadowTexture}
+            color="#26343a"
+            transparent
+            opacity={0.62}
+            side={DoubleSide}
+            depthWrite={false}
+          />
+        </mesh>
 
-      {showInternals && layers.albumen && (
-        <Albumen
-          sectioned={sectioned}
-          selected={selectedLayer === "albumen"}
-          onSelect={() => onSelectLayer("albumen")}
-        />
-      )}
-      {showInternals && layers.extraembryonic && safeDay >= 4 && (
-        <ExtraembryonicMembranes
-          day={safeDay}
-          sectioned={sectioned}
-          ovoscopy={ovoscopy}
-          onSelect={() => onSelectLayer("extraembryonic")}
-        />
-      )}
-      {showInternals && layers.yolk && (
-        <YolkContents
-          day={safeDay}
-          ovoscopy={ovoscopy}
-          selected={selectedLayer === "yolk"}
-          onSelect={() => onSelectLayer("yolk")}
-        />
-      )}
-      {showInternals && layers.membranes && (
-        <Chalazae onSelect={() => onSelectLayer("membranes")} />
-      )}
-      {showInternals && layers.vessels && safeDay >= 2 && (
-        <VascularNetwork
-          day={safeDay}
-          ovoscopy={ovoscopy}
-          onSelect={() => onSelectLayer("vessels")}
-        />
-      )}
-      {showInternals && layers.extraembryonic && (
-        <AirCell day={safeDay} onSelect={() => onSelectLayer("membranes")} />
-      )}
-      {showInternals && layers.embryo && (
-        <OrganicEmbryo
-          day={safeDay}
-          ovoscopy={ovoscopy}
-          selected={selectedLayer === "embryo"}
-          onSelect={() => onSelectLayer("embryo")}
-        />
-      )}
-      {layers.membranes && (
-        <ShellMembranes
-          sectioned={sectioned && !hatching}
-          hatching={hatching}
-          ovoscopy={ovoscopy}
-          onSelect={() => onSelectLayer("membranes")}
-        />
-      )}
-      {layers.shell && (
-        <EggShell
-          sectioned={sectioned && !hatching}
-          hatching={hatching}
-          ovoscopy={ovoscopy}
-          selected={selectedLayer === "shell"}
-          onSelect={() => onSelectLayer("shell")}
-        />
-      )}
+        <LayerTransition
+          visible={showInternals && layers.albumen}
+          reducedMotion={reducedMotion}
+        >
+          <Albumen
+            sectioned={safeSectioned}
+            selected={selectedLayer === "albumen"}
+            onSelect={() => onSelectLayer("albumen")}
+          />
+        </LayerTransition>
+        <LayerTransition
+          visible={showInternals && layers.extraembryonic && safeDay >= 4}
+          reducedMotion={reducedMotion}
+        >
+          <ExtraembryonicMembranes
+            day={safeDay}
+            sectioned={safeSectioned}
+            ovoscopy={ovoscopy}
+            onSelect={() => onSelectLayer("extraembryonic")}
+          />
+        </LayerTransition>
+        <LayerTransition
+          visible={showInternals && layers.yolk}
+          reducedMotion={reducedMotion}
+        >
+          <YolkContents
+            day={safeDay}
+            ovoscopy={ovoscopy}
+            selected={selectedLayer === "yolk"}
+            onSelect={() => onSelectLayer("yolk")}
+          />
+        </LayerTransition>
+        <LayerTransition
+          visible={showInternals && layers.membranes}
+          reducedMotion={reducedMotion}
+        >
+          <Chalazae onSelect={() => onSelectLayer("membranes")} />
+        </LayerTransition>
+        <LayerTransition
+          visible={showInternals && layers.vessels && safeDay >= 2}
+          reducedMotion={reducedMotion}
+        >
+          <VascularNetwork
+            day={safeDay}
+            ovoscopy={ovoscopy}
+            onSelect={() => onSelectLayer("vessels")}
+          />
+        </LayerTransition>
+        <LayerTransition
+          visible={showInternals && layers.extraembryonic}
+          reducedMotion={reducedMotion}
+        >
+          <AirCell day={safeDay} onSelect={() => onSelectLayer("membranes")} />
+        </LayerTransition>
+        <LayerTransition
+          visible={showInternals && layers.embryo}
+          reducedMotion={reducedMotion}
+        >
+          <OrganicEmbryo
+            day={safeDay}
+            ovoscopy={ovoscopy}
+            selected={selectedLayer === "embryo"}
+            onSelect={() => onSelectLayer("embryo")}
+          />
+        </LayerTransition>
+        <LayerTransition
+          visible={layers.membranes}
+          reducedMotion={reducedMotion}
+        >
+          <ShellMembranes
+            sectioned={safeSectioned && !safeHatching}
+            hatching={safeHatching}
+            ovoscopy={ovoscopy}
+            onSelect={() => onSelectLayer("membranes")}
+          />
+        </LayerTransition>
+        <LayerTransition visible={layers.shell} reducedMotion={reducedMotion}>
+          <EggShell
+            sectioned={safeSectioned && !safeHatching}
+            hatching={safeHatching}
+            ovoscopy={ovoscopy}
+            selected={selectedLayer === "shell"}
+            onSelect={() => onSelectLayer("shell")}
+          />
+        </LayerTransition>
+      </group>
     </>
   );
 }

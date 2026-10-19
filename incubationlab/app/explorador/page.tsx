@@ -91,32 +91,34 @@ export default function ExploradorPage() {
           </div>
         </section>
         <article className="card feature-card structure-detail" aria-live="polite">
-          <span className="section-kicker">Definición · día {day}</span>
-          <h2>{selectedStructure}</h2>
-          <div className="definition-block">
-            <h3>Qué es</h3>
-            <p>{definition.definition}</p>
-          </div>
-          <div className="definition-block">
-            <h3>Función y relación con el desarrollo</h3>
-            <p>{definition.role}</p>
-          </div>
-          <div className="definition-context">
-            <strong>Etapa:</strong> {definition.development}
-            {highlightedDays.length > 0 && (
-              <span className="definition-days">
-                En esta secuencia se destaca en {formatDays(highlightedDays)}.
-              </span>
+          <div className="content-enter" key={`${day}-${selectedStructure}`}>
+            <span className="section-kicker">Definición · día {day}</span>
+            <h2>{selectedStructure}</h2>
+            <div className="definition-block">
+              <h3>Qué es</h3>
+              <p>{definition.definition}</p>
+            </div>
+            <div className="definition-block">
+              <h3>Función y relación con el desarrollo</h3>
+              <p>{definition.role}</p>
+            </div>
+            <div className="definition-context">
+              <strong>Etapa:</strong> {definition.development}
+              {highlightedDays.length > 0 && (
+                <span className="definition-days">
+                  En esta secuencia se destaca en {formatDays(highlightedDays)}.
+                </span>
+              )}
+            </div>
+            <a className="definition-source" href={source.href} target="_blank" rel="noreferrer">
+              Fuente: {source.label}
+            </a>
+            {layer && (
+              <p className="representation-note">
+                Capa relacionada en el visor: {layer.name} (representación esquemática).
+              </p>
             )}
           </div>
-          <a className="definition-source" href={source.href} target="_blank" rel="noreferrer">
-            Fuente: {source.label}
-          </a>
-          {layer && (
-            <p className="representation-note">
-              Capa relacionada en el visor: {layer.name} (representación esquemática).
-            </p>
-          )}
         </article>
       </div>
     </EducationalPage>

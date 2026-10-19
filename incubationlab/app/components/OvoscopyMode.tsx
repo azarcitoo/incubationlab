@@ -19,7 +19,7 @@ export default function OvoscopyMode({ active, onToggle }: OvoscopyModeProps) {
         {active ? <Lightbulb size={15} /> : <ScanLine size={15} />}
         {active ? "Salir de ovoscopia" : "Modo ovoscopia"}
       </button>
-      <p className="mode-explanation">
+      <p className="mode-explanation content-enter" key={String(active)}>
         <strong>{active ? "Simulación activa." : "Observación simulada."}</strong>{" "}
         La ovoscopia real depende del equipo y la experiencia; esta vista no
         determina la viabilidad del embrión.

@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
+import { Vector3 } from "three";
 import { Egg, Eye, EyeOff, Info, Layers3, RotateCcw, Scissors, ZoomIn, ZoomOut } from "lucide-react";
 import { eggLayerInfo, type EggLayerId } from "../data/structures";
 
@@ -46,16 +47,80 @@ export default function EggViewer({
   const [showLayers, setShowLayers] = useState(false);
   const [selectedLayer, setSelectedLayer] = useState<EggLayerId>("embryo");
   const [hatching, setHatching] = useState(false);
+  const cameraFrame = useRef<number | null>(null);
   const hatchingActive = hatching && day >= 19;
 
+  const cancelCameraTransition = useCallback(() => {
+    if (cameraFrame.current === null) return;
+    window.cancelAnimationFrame(cameraFrame.current);
+    cameraFrame.current = null;
+  }, []);
+
+  useEffect(() => {
+    const orbit = controls.current;
+    if (!orbit) return;
+    orbit.addEventListener("start", cancelCameraTransition);
+    return () => {
+      orbit.removeEventListener("start", cancelCameraTransition);
+      cancelCameraTransition();
+    };
+  }, [cancelCameraTransition]);
+
+  useEffect(() => {
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const stopForReducedMotion = () => {
+      if (preference.matches) cancelCameraTransition();
+    };
+    preference.addEventListener("change", stopForReducedMotion);
+    return () => preference.removeEventListener("change", stopForReducedMotion);
+  }, [cancelCameraTransition]);
+
+  const animateCamera = useCallback((
+    destinationPosition: Vector3,
+    destinationTarget: Vector3,
+    duration: number,
+  ) => {
+    const orbit = controls.current;
+    if (!orbit) return;
+    cancelCameraTransition();
+
+    const startPosition = orbit.object.position.clone();
+    const startTarget = orbit.target.clone();
+    const startTime = performance.now();
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const durationMs = reducedMotion ? 0 : duration;
+
+    const step = (now: number) => {
+      const elapsed = durationMs === 0 ? 1 : Math.min(1, (now - startTime) / durationMs);
+      const eased = elapsed * elapsed * (3 - 2 * elapsed);
+      orbit.object.position.lerpVectors(startPosition, destinationPosition, eased);
+      orbit.target.lerpVectors(startTarget, destinationTarget, eased);
+      orbit.update();
+
+      if (elapsed >= 1) {
+        cameraFrame.current = null;
+      } else {
+        cameraFrame.current = window.requestAnimationFrame(step);
+      }
+    };
+
+    cameraFrame.current = window.requestAnimationFrame(step);
+  }, [cancelCameraTransition]);
+
   const adjustZoom = (amount: number) => {
-    if (!controls.current) return;
-    const distance = controls.current.object.position.distanceTo(controls.current.target);
-    controls.current.object.position.setLength(Math.max(3.3, Math.min(7.4, distance + amount)));
-    controls.current.update();
+    const orbit = controls.current;
+    if (!orbit) return;
+    const direction = orbit.object.position.clone().sub(orbit.target).normalize();
+    const distance = orbit.object.position.distanceTo(orbit.target);
+    const nextDistance = Math.max(3.3, Math.min(7.4, distance + amount));
+    const destination = orbit.target.clone().addScaledVector(direction, nextDistance);
+    animateCamera(destination, orbit.target.clone(), 280);
   };
 
-  const resetView = () => controls.current?.reset();
+  const resetView = () => {
+    animateCamera(new Vector3(2.65, 1.35, 4.35), new Vector3(0, 0, 0), 350);
+  };
+
   const selectedInfo = eggLayerInfo.find((layer) => layer.id === selectedLayer);
 
   return (
@@ -126,7 +191,7 @@ export default function EggViewer({
       </div>
 
       {showLayers && (
-        <div className="egg-layer-panel" aria-label="Visibilidad de las capas">
+        <div className="egg-layer-panel content-enter" aria-label="Visibilidad de las capas">
           <div className="egg-layer-heading">Capas anatómicas</div>
           {eggLayerInfo.map((layer) => (
             <div className="egg-layer-row" key={layer.id}>

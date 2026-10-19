@@ -212,7 +212,7 @@ input:focus-visible {
   background:
     radial-gradient(ellipse at 50% 56%, rgba(24, 67, 69, 0.2), transparent 43%),
     linear-gradient(180deg, #0c1922 0%, #09141d 100%);
-  transition: background 350ms ease;
+  transition: background 300ms ease;
 }
 
 .viewer-card.is-ovoscopy {
@@ -265,7 +265,16 @@ input:focus-visible {
   transition:
     border-color 150ms ease,
     background-color 150ms ease,
-    color 150ms ease;
+    color 150ms ease,
+    transform 130ms ease;
+}
+
+.icon-button:active,
+.mode-button:active,
+.timeline-control:active:not(:disabled),
+.structure-choice:active,
+.feature-button:active {
+  transform: scale(0.98);
 }
 
 .icon-button:hover,
@@ -492,6 +501,7 @@ input:focus-visible {
   cursor: pointer;
   touch-action: pan-y;
   -webkit-tap-highlight-color: transparent;
+  transition: background 150ms ease;
 }
 
 .day-range::-webkit-slider-thumb {
@@ -528,6 +538,10 @@ input:focus-visible {
   height: 10px;
   background: #93aaa9;
   transform: translateX(-50%);
+  transition:
+    height 150ms ease,
+    background-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .milestone span {
@@ -562,6 +576,12 @@ input:focus-visible {
   min-height: 454px;
   flex-direction: column;
   padding: 21px 20px 18px;
+}
+
+.development-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
 }
 
 .development-day {
@@ -927,6 +947,7 @@ input:focus-visible {
 .explorer-day-row .day-range::-webkit-slider-thumb {
   width: 20px;
   height: 20px;
+  margin-top: -7px;
 }
 
 .explorer-day-row .day-range::-moz-range-thumb {
@@ -957,6 +978,11 @@ input:focus-visible {
   color: #b9cacc;
   cursor: pointer;
   font-size: 11px;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
 }
 
 .structure-choice:hover,
@@ -967,8 +993,32 @@ input:focus-visible {
   color: var(--accent);
 }
 
+.structure-choice:hover {
+  transform: translateY(-2px);
+}
+
 .structure-detail {
   min-height: 190px;
+}
+
+.content-enter {
+  animation: content-enter 200ms ease both;
+}
+
+.egg-layer-panel.content-enter {
+  animation-duration: 220ms;
+}
+
+@keyframes content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .definition-block h3 {
@@ -1513,5 +1563,7 @@ input:focus-visible {
   *::after {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
