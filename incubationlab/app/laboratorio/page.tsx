@@ -14,21 +14,21 @@ const comparisonText = {
   above: "Por encima del intervalo de referencia citado",
 };
 
-const formatCelsius = (fahrenheit: number) =>
-  ((fahrenheit - 32) * 5 / 9).toFixed(1).replace(".", ",");
+const formatCelsius = (temperatureC: number) =>
+  temperatureC.toFixed(1).replace(".", ",");
 
 export default function LaboratoryPage() {
   const [day, setDay] = useState(1);
   const [incubatorType, setIncubatorType] = useState<IncubatorType>("forced-air");
-  const [temperatureF, setTemperatureF] = useState(100);
-  const [wetBulbF, setWetBulbF] = useState(86);
+  const [temperatureC, setTemperatureC] = useState(37.8);
+  const [wetBulbC, setWetBulbC] = useState(30);
   const [turningEnabled, setTurningEnabled] = useState(true);
   const [ventilationProgressive, setVentilationProgressive] = useState(true);
   const assessment = assessLaboratorySettings({
     day,
     incubatorType,
-    temperatureF,
-    wetBulbF,
+    temperatureC,
+    wetBulbC,
     turningEnabled,
     ventilationProgressive,
   });
@@ -52,7 +52,7 @@ export default function LaboratoryPage() {
             <select value={incubatorType} onChange={(event) => {
               const nextType = event.target.value as IncubatorType;
               setIncubatorType(nextType);
-              setTemperatureF(nextType === "forced-air" ? 100 : 102);
+              setTemperatureC(nextType === "forced-air" ? 37.8 : 38.9);
             }}>
               <option value="forced-air">Aire forzado</option>
               <option value="still-air">Aire quieto</option>
@@ -60,13 +60,13 @@ export default function LaboratoryPage() {
           </label>
           <label>
             Temperatura configurada
-            <span className="control-value">{temperatureF} °F ({formatCelsius(temperatureF)} °C)</span>
-            <input type="range" min="96" max="105" step="0.5" value={temperatureF} onChange={(event) => setTemperatureF(Number(event.target.value))} aria-label="Temperatura configurada en grados Fahrenheit" />
+            <span className="control-value">{formatCelsius(temperatureC)} °C</span>
+            <input type="range" min="35.6" max="40.6" step="0.1" value={temperatureC} onChange={(event) => setTemperatureC(Number(event.target.value))} aria-label="Temperatura configurada en grados Celsius" />
           </label>
           <label>
             Lectura de bulbo húmedo
-            <span className="control-value">{wetBulbF} °F</span>
-            <input type="range" min="80" max="95" value={wetBulbF} onChange={(event) => setWetBulbF(Number(event.target.value))} aria-label="Lectura de bulbo húmedo en grados Fahrenheit" />
+            <span className="control-value">{formatCelsius(wetBulbC)} °C</span>
+            <input type="range" min="26.7" max="35" step="0.1" value={wetBulbC} onChange={(event) => setWetBulbC(Number(event.target.value))} aria-label="Lectura de bulbo húmedo en grados Celsius" />
           </label>
           <label className="check-control">
             <input type="checkbox" checked={turningEnabled} onChange={(event) => setTurningEnabled(event.target.checked)} />
@@ -79,18 +79,18 @@ export default function LaboratoryPage() {
         </section>
 
         <section className="card feature-card lab-results" aria-live="polite">
-          <span className="section-kicker">Comparación, no diagnóstico</span>
+          <span className="section-kicker">Resultados del escenario</span>
           <h2>Escenario · día {day}</h2>
           <dl className="result-list">
             <div>
               <dt>Temperatura</dt>
               <dd>{comparisonText[assessment.temperature]}</dd>
-              <small>Referencia seleccionada: {assessment.referenceTemperatureF} °F ({formatCelsius(assessment.referenceTemperatureF)} °C). La fuente indica que fluctuaciones de 1 °F o menos son tolerables; esto no define por sí solo límites universales de seguridad.</small>
+              <small>Referencia publicada: {formatCelsius(assessment.referenceTemperatureC)} °C. La comparación aplica la tolerancia de aproximadamente 0,6 °C indicada por la fuente; no es un límite universal de seguridad.</small>
             </div>
             <div>
               <dt>Humedad · bulbo húmedo</dt>
               <dd>{comparisonText[assessment.humidity]}</dd>
-              <small>Referencia publicada para este periodo: {reference.wetBulbF}; la fuente también cita {reference.humidityRelativePercent} de humedad relativa. La aplicación no calcula la humedad relativa real a partir de los controles.</small>
+              <small>Referencia publicada de bulbo húmedo: {reference.wetBulbRangeC}; la fuente también cita {reference.humidityRelativePercent} de humedad relativa. La aplicación no calcula la humedad relativa real a partir de los controles.</small>
             </div>
             <div>
               <dt>Volteo</dt>
@@ -104,7 +104,7 @@ export default function LaboratoryPage() {
             </div>
           </dl>
           <p className="feature-note">
-            Estos intervalos no son alarmas, recomendaciones individualizadas ni límites de seguridad para todos los equipos. La lectura del bulbo húmedo y su relación con la humedad relativa dependen de la temperatura y del método de medición. Consulta el manual de tu incubadora y fuentes técnicas.
+            Son comparaciones con la guía citada, no mediciones de una incubadora real. La humedad relativa depende de la temperatura y del método de medición.
           </p>
         </section>
       </div>

@@ -6,31 +6,9 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { Egg, Eye, EyeOff, Info, Layers3, RotateCcw, Scissors, ZoomIn, ZoomOut } from "lucide-react";
-
-export type EggLayerId =
-  | "shell"
-  | "membranes"
-  | "albumen"
-  | "yolk"
-  | "vessels"
-  | "embryo"
-  | "extraembryonic";
+import { eggLayerInfo, type EggLayerId } from "../data/structures";
 
 export type EggLayers = Record<EggLayerId, boolean>;
-
-const layerInfo: {
-  id: EggLayerId;
-  name: string;
-  description: string;
-}[] = [
-  { id: "shell", name: "Cáscara", description: "Capa calcificada protectora; en la vista seccionada se retira una parte para mostrar el interior." },
-  { id: "membranes", name: "Membranas", description: "Las membranas testáceas revisten la cáscara; la membrana vitelina envuelve la yema." },
-  { id: "albumen", name: "Clara", description: "La albúmina gelatinosa amortigua los golpes y aporta agua al embrión." },
-  { id: "yolk", name: "Yema y saco vitelino", description: "Reserva nutritiva rodeada por el saco vitelino vascularizado." },
-  { id: "vessels", name: "Vasos sanguíneos", description: "Red extraembrionaria ilustrativa conectada al embrión y a la superficie del vitelo." },
-  { id: "embryo", name: "Embrión", description: "Modelo educativo generado mediante procedimientos; la silueta y las estructuras varían gradualmente según el día." },
-  { id: "extraembryonic", name: "Membranas extraembrionarias", description: "Representación simplificada del amnios y la membrana corioalantoidea, que intervienen en la protección y el intercambio gaseoso." },
-];
 
 const defaultLayers: EggLayers = {
   shell: true,
@@ -78,7 +56,7 @@ export default function EggViewer({
   };
 
   const resetView = () => controls.current?.reset();
-  const selectedInfo = layerInfo.find((layer) => layer.id === selectedLayer) ?? layerInfo[5];
+  const selectedInfo = eggLayerInfo.find((layer) => layer.id === selectedLayer);
 
   return (
     <section
@@ -150,7 +128,7 @@ export default function EggViewer({
       {showLayers && (
         <div className="egg-layer-panel" aria-label="Visibilidad de las capas">
           <div className="egg-layer-heading">Capas anatómicas</div>
-          {layerInfo.map((layer) => (
+          {eggLayerInfo.map((layer) => (
             <div className="egg-layer-row" key={layer.id}>
               <button
                 className="egg-layer-toggle"
@@ -209,13 +187,15 @@ export default function EggViewer({
         </Canvas>
       </div>
 
-      <div className="egg-structure-note" aria-live="polite">
-        <Info size={13} />
-        <span><strong>{selectedInfo.name}:</strong> {selectedInfo.description}</span>
-      </div>
+      {selectedInfo && (
+        <div className="egg-structure-note" aria-live="polite">
+          <Info size={13} />
+          <span><strong>{selectedInfo.name}:</strong> {selectedInfo.description}</span>
+        </div>
+      )}
       <div className="viewer-bottomline" aria-hidden="true">
         <span>Arrastra para rotar · rueda para acercar</span>
-        <span>Ilustración conceptual; no es una representación anatómica validada</span>
+        <span>Visor interactivo · Día {day}</span>
       </div>
     </section>
   );

@@ -14,7 +14,8 @@ import {
   TubeGeometry,
   Vector3,
 } from "three";
-import type { EggLayerId, EggLayers } from "./EggViewer";
+import type { EggLayerId } from "../data/structures";
+import type { EggLayers } from "./EggViewer";
 import OrganicEmbryo from "./OrganicEmbryo";
 
 type EggAnatomyProps = {

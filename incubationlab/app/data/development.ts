@@ -1,9 +1,11 @@
+import type { DevelopmentStructure } from "./structures";
+
 export type DevelopmentDay = {
   day: number;
   stage: string;
   description: string;
   changes: string[];
-  structures: string[];
+  structures: DevelopmentStructure[];
   curiosity: string;
 };
 

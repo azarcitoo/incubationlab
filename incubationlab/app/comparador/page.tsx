@@ -14,7 +14,7 @@ export default function ComparadorPage() {
     <EducationalPage
       eyebrow="Desarrollo · comparación por etapas"
       title="Comparador de etapas"
-      description="Contrasta dos fichas diarias sin presentar el modelo conceptual como una reconstrucción anatómica precisa."
+      description="Contrasta dos fichas diarias y consulta cambios, estructuras y curiosidades lado a lado."
     >
       <section className="card feature-card" aria-label="Seleccionar días para comparar">
         <div className="compare-selectors">
@@ -60,9 +60,6 @@ export default function ComparadorPage() {
           </article>
         ))}
       </div>
-      <p className="feature-footnote">
-        Las descripciones y los intervalos diarios son orientativos. La estadificación científica se basa en rasgos morfológicos y no siempre coincide exactamente con el día de incubación.
-      </p>
     </EducationalPage>
   );
 }

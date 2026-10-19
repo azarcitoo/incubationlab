@@ -36,20 +36,30 @@ export default function MethodologyPage() {
             La ficha presenta una secuencia educativa de 21 días. La estadificación de Hamburger y Hamilton se basa en rasgos morfológicos; la correspondencia con el tiempo puede variar según las condiciones y no debe interpretarse como una equivalencia exacta.
           </p>
           <p>
-            Los textos diarios sintetizan cambios generales y no constituyen un atlas anatómico ni sustituyen una fuente de embriología especializada. La forma procedural del huevo y del embrión es conceptual, no un escaneo ni una reconstrucción validada.
+            Los textos diarios sintetizan cambios generales y las definiciones enlazan referencias introductorias. El catálogo es una guía de aprendizaje, no una estadificación diagnóstica.
           </p>
         </section>
         <section className="card feature-card">
           <span className="section-kicker">Simulador de parámetros</span>
-          <h2>Escenarios de referencia, no predicciones</h2>
+          <h2>Referencias convertidas al sistema Celsius</h2>
           <p>
-            El laboratorio compara temperatura, lectura de bulbo húmedo, volteo y ventilación seleccionados con valores citados por una guía universitaria. No calcula humedad relativa a partir de cada lectura, no evalúa el equipo, no mide condiciones reales y no estima fertilidad, viabilidad ni porcentaje de eclosión.
+            Las temperaturas de incubación y las lecturas de bulbo húmedo de la guía de Mississippi State University Extension se convirtieron a grados Celsius y se redondearon a una décima. Para aire forzado se muestran 37,8 °C y para aire quieto, 38,9 °C. El bulbo húmedo se presenta como 29,4–30,6 °C durante los primeros 18 días y 31,7–32,2 °C en los tres días finales. La humedad relativa citada por la guía se conserva como porcentaje.
           </p>
           <p>
-            Los valores de aire forzado y aire quieto reflejan la configuración indicada por la publicación. La operación de equipos reales depende de la distribución térmica, la colocación del termómetro, el diseño del fabricante y otros factores que la simulación no modela.
+            El control compara con esos valores de referencia y con la tolerancia publicada, pero no mide un equipo ni calcula la humedad relativa a partir del bulbo húmedo. No estima fertilidad, viabilidad ni porcentaje de eclosión. Para operar una incubadora se deben seguir las indicaciones de su fabricante.
           </p>
         </section>
       </div>
+      <section className="card feature-card references-card">
+        <span className="section-kicker">Alcance de la visualización</span>
+        <h2>Modelo 3D conceptual</h2>
+        <p>
+          El huevo y el embrión se construyen con geometría procedural para ilustrar relaciones espaciales y cambios generales. No representan tejidos escaneados ni una reconstrucción anatómica validada, y el porcentaje de la línea de tiempo indica el avance por días del recorrido, no una medición fisiológica.
+        </p>
+        <p>
+          El modo de ovoscopia cambia la iluminación de la escena y simula una fuente de luz situada detrás del huevo.
+        </p>
+      </section>
       <section className="card feature-card references-card">
         <span className="section-kicker">Bibliografía consultada</span>
         <h2>Fuentes</h2>
@@ -62,9 +72,6 @@ export default function MethodologyPage() {
             </li>
           ))}
         </ol>
-        <p className="feature-note">
-          Las fuentes sustentan marcos de referencia generales; no validan automáticamente cada frase diaria ni la geometría del modelo. Para docencia formal o uso técnico, comprueba las publicaciones originales y añade una revisión experta.
-        </p>
       </section>
     </EducationalPage>
   );

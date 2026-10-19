@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import { Activity, FlaskConical } from "lucide-react";
+import { FlaskConical } from "lucide-react";
 import DevelopmentPanel from "./DevelopmentPanel";
 import IncubationTimeline from "./IncubationTimeline";
 import OvoscopyMode from "./OvoscopyMode";
@@ -68,10 +68,6 @@ export default function IncubationPage() {
           <h1 id="page-title">La vida dentro del huevo</h1>
           <p>Explora los 21 días del desarrollo embrionario.</p>
         </div>
-        <div className="model-notice">
-          <Activity size={14} />
-          Modelo didáctico, no diagnóstico
-        </div>
       </section>
 
       <div className="workspace">
@@ -99,11 +95,6 @@ export default function IncubationPage() {
           active={ovoscopy}
           onToggle={() => setOvoscopy((current) => !current)}
         />
-        <p className="model-disclaimer">
-          Ilustración 3D simplificada y generada mediante procedimientos. Las etapas son orientativas:
-          el ritmo de desarrollo puede variar según las condiciones de
-          incubación.
-        </p>
       </footer>
     </main>
   );

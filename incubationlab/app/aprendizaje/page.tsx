@@ -39,7 +39,7 @@ export default function LearningPage() {
           <div className="quiz-complete">
             <span className="section-kicker">Recorrido completado</span>
             <h2>Resultado: {score} de {quizQuestions.length}</h2>
-            <p>El cuestionario es formativo. Revisa las referencias y las limitaciones antes de interpretar cada respuesta.</p>
+            <p>Las respuestas incluyen fuentes para que puedas seguir explorando los temas.</p>
             <button className="feature-button" type="button" onClick={restart}>Volver a empezar</button>
           </div>
         ) : (
@@ -86,9 +86,6 @@ export default function LearningPage() {
           </>
         )}
       </section>
-      <p className="feature-footnote">
-        Las opciones incorrectas se incluyen para evaluar la comprensión y no deben interpretarse como hechos científicos.
-      </p>
     </EducationalPage>
   );
 }

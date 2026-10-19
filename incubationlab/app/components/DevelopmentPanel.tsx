@@ -75,9 +75,6 @@ export default function DevelopmentPanel({
             style={{ width: `${guideProgress}%` }}
           />
         </div>
-        <p className="progress-note">
-          Guía del recorrido, no una medición fisiológica del embrión.
-        </p>
       </div>
     </aside>
   );
